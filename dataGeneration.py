@@ -1,6 +1,7 @@
 import math as m
 import enum
 import matplotlib.pyplot as plt
+import pandas as pd
 
 #
 #       Control GENERATION
@@ -140,6 +141,13 @@ unzippedControl = []
 for elem in tuple(data): 
     unzippedData.append(elem[0])
     unzippedControl.append(elem[1])
-plt.plot(unzippedData,c='b')
-plt.plot(unzippedControl, c='r')
-plt.show()
+# plt.plot(unzippedData,c='b')
+# plt.plot(unzippedControl, c='r')
+# plt.show()
+
+# na szybko dla 1 zm stanu i 1 sterowania, ps czym jest ta abominacja, co tak sie rozpakowuje strasznie
+# Tworzenie DataFrame z danymi
+df = pd.DataFrame({'x1': unzippedData, 'u1': unzippedControl})
+
+# Zapis do pliku CSV
+df.to_csv('Data/generated_data.csv', index=False)
