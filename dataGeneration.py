@@ -3,6 +3,7 @@ import enum
 import matplotlib.pyplot as plt
 import pandas as pd
 import random
+import numpy as np
 
 #
 #       Control GENERATION
@@ -94,6 +95,9 @@ def SingleInputConst(u,const:int):
 def SingleDistraction(u,dist_amplitude:int):
     u[-1] += random.normalvariate(0,1) * dist_amplitude
 
+def GenerateSignalNoise(len,len2, amplitude):
+    Z = ((np.random.rand(len,len2)*2)-1)*amplitude
+    return list(np.array(Z))
 
 def TwoImputSimpleSin(u,k):
     u[0].append(2 * m.sin(m.pi * k /10))
@@ -156,7 +160,7 @@ def AppendInitialSystem(Y,U,model:ModelType,data_size:int):
     #Y = Y[2:len(Y)]
 
 
-def generate_data(length:int,Control_type:str,model_type: ModelType,const_value :int = 0,disruption_amplitude: int = 0,jump_value:int = 1, filename_to_save:str = "generated_data"):
+def generate_data(length:int,Control_type:str,model_type: ModelType,const_value :int = 0,disruption_amplitude: int = 0, output_noise: int = 0,jump_value:int = 1, filename_to_save:str = "generated_data"):
     """function generate data of given model_type, length and input_complexity
 
     Args:
@@ -194,6 +198,8 @@ def generate_data(length:int,Control_type:str,model_type: ModelType,const_value 
     if data_size == 2:
         Y = [[],[]]
         U = [[],[]]
+        
+        
     AppendInitialControl(U,data_size,Control_type,const_value=const_value,jump_value=jump_value,dist_val=disruption_amplitude)
     AppendInitialSystem(Y,U,model_type,data_size)
     print("preU:")
@@ -209,17 +215,22 @@ def generate_data(length:int,Control_type:str,model_type: ModelType,const_value 
     print(len(U))
     print("postY:")
     print(len(Y))
+    Z = GenerateSignalNoise(1,len(Y),output_noise)[0]
     if data_size == 2:
-        df = pd.DataFrame({'Y1': Y[0], 'U1': U[0],'Y2': Y[1], 'U2': U[2]})
+        Z = GenerateSignalNoise(len(Y),len(Y[0]),output_noise)
+    
+    if data_size == 2:
+        Y = [list(l) for l in Y]
+        df = pd.DataFrame({'Y1': Y[0], 'U1': U[0],'Y2': Y[1], 'U2': U[1]})
         df.to_csv('Data/'+filename_to_save+'.csv', index=False)
         return zip(zip(Y[0], U[0]),zip(Y[1], U[1]))
-
+    print(Y)
     df = pd.DataFrame({'Y': Y, 'U': U})
     df.to_csv('Data/'+filename_to_save+'.csv', index=False)
     return zip(Y,U)
 
 
-data = generate_data(400,"Const",ModelType.SingleInputSingleOutput2,disruption_amplitude=0.5)
+data = generate_data(1000,"Const",ModelType.SingleInputSingleOutput1,disruption_amplitude=0.5,output_noise=0.1,filename_to_save="learn_noise_siso2")
 print("")
 print("Wyświetlamy wygenerowane dane:")
 print("niebiseki - model   output")
@@ -228,17 +239,19 @@ print("")
 unzippedData = []
 unzippedControl = []
 for elem in tuple(data): 
-    print(elem)
+    # print(elem)
     unzippedData.append(elem[0])
     unzippedControl.append(elem[1])
 
-fig, ax = plt.subplots(figsize=(5, 2.7), layout='constrained')
+# SingleInputSingleOutput1
 
-ax.plot(unzippedData,c='b',label="Output")
-ax.plot(unzippedControl, c='r',label="Input")
-ax.legend() 
-plt.grid(True)
-plt.show()
+# fig, ax = plt.subplots(figsize=(5, 2.7), layout='constrained')
+
+# ax.plot(unzippedData,c='b',label="Output")
+# ax.plot(unzippedControl, c='r',label="Input")
+# ax.legend() 
+# plt.grid(True)
+# plt.show()
 
 # na szybko dla 1 zm stanu i 1 sterowania, ps czym jest ta abominacja, co tak sie rozpakowuje strasznie
 # Tworzenie DataFrame z danymi
