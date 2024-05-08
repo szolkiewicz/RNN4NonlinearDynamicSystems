@@ -230,7 +230,7 @@ def generate_data(length:int,Control_type:str,model_type: ModelType,const_value 
     return zip(Y,U)
 
 
-data = generate_data(1000,"Const",ModelType.SingleInputSingleOutput1,disruption_amplitude=0.5,output_noise=0.1,filename_to_save="learn_noise_siso2")
+data = generate_data(1000,"Const",ModelType.SingleInputSingleOutput1,disruption_amplitude=2,output_noise=0,filename_to_save="learn_noise_siso2")
 print("")
 print("Wyświetlamy wygenerowane dane:")
 print("niebiseki - model   output")
@@ -245,13 +245,13 @@ for elem in tuple(data):
 
 # SingleInputSingleOutput1
 
-# fig, ax = plt.subplots(figsize=(5, 2.7), layout='constrained')
+fig, ax = plt.subplots(figsize=(5, 2.7), layout='constrained')
 
-# ax.plot(unzippedData,c='b',label="Output")
-# ax.plot(unzippedControl, c='r',label="Input")
-# ax.legend() 
-# plt.grid(True)
-# plt.show()
+ax.plot(unzippedData,c='b',label="Output")
+ax.plot(unzippedControl, c='r',label="Input")
+ax.legend() 
+plt.grid(True)
+plt.show()
 
 # na szybko dla 1 zm stanu i 1 sterowania, ps czym jest ta abominacja, co tak sie rozpakowuje strasznie
 # Tworzenie DataFrame z danymi
