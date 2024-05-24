@@ -93,7 +93,7 @@ def SingleInputConst(u,const:int):
     u.append(const)
 
 def SingleDistraction(u,dist_amplitude:int):
-    u[-1] += random.normalvariate(0,1) * dist_amplitude
+    u[-1] += random.uniform(-1,1) * dist_amplitude
 
 def GenerateSignalNoise(len,len2, amplitude):
     Z = ((np.random.rand(len,len2)*2)-1)*amplitude
@@ -113,8 +113,8 @@ def TwoInputConst(u,const:int):
     u[1].append(const)
 
 def TwoDistraction(u,dist_amplitude:int):
-    u[0][-1] += random.normalvariate(0,1) * dist_amplitude
-    u[1][-1] += random.normalvariate(0,1) * dist_amplitude
+    u[0][-1] += random.uniform(-1,1) * dist_amplitude
+    u[1][-1] += random.uniform(-1,1) * dist_amplitude
 
 
 #
@@ -160,7 +160,7 @@ def AppendInitialSystem(Y,U,model:ModelType,data_size:int):
     #Y = Y[2:len(Y)]
 
 
-def generate_data(length:int,Control_type:str,model_type: ModelType,const_value :int = 0,disruption_amplitude: int = 0, output_noise: int = 0,jump_value:int = 1, filename_to_save:str = "generated_data"):
+def generate_data(length:int,Control_type:str,model_type: ModelType,const_value :int = 0,disruption_amplitude: int = 0, output_noise: int = 0, output_noise_scale: int = 0,jump_value:int = 1, filename_to_save:str = "generated_data",use_preprocesing_scale:bool = False):
     """function generate data of given model_type, length and input_complexity
 
     Args:
@@ -171,12 +171,10 @@ def generate_data(length:int,Control_type:str,model_type: ModelType,const_value 
         disruption_amplitude (int): ustawia ampltude zakłuceń jakie pojawią się w sterwaniu  
         iump_value (int): określa wysokość zmiany delty diracka albo skoku jednostkowego (uwaga mi raz wykoleiło system chyba 2 z rowerka (trzeba uważać ))
         filename_to_save (str): nazwa pliku pod jaką zostaną zapisane dane 
-
-    UWAGI:
-        Fajny ten SISO1 bo jest nie stabilny dla const wejścia ;-; trzeba będzie go zmienić raczej używamy SISO2. 
+        output_noise_scale (double) - dodaje szum o wartosci procentowej do aktualnego wyjścia jf wyjście 
 
     Returns:
-        _type_: zip złorzony z par (Y_n,U_n)
+        TUPLA{zip złorzony z par (Y_n,U_n)<<"to co było" , scale_value(FLOAT) <<"wartość przez jaką przeskalowane jest wyjście i sterowanie"}
     """
     #
     # Sprawdzania poprawności typu sterowania
@@ -199,7 +197,7 @@ def generate_data(length:int,Control_type:str,model_type: ModelType,const_value 
         Y = [[],[]]
         U = [[],[]]
         
-        
+    max_finded_falue = 0.0
     AppendInitialControl(U,data_size,Control_type,const_value=const_value,jump_value=jump_value,dist_val=disruption_amplitude)
     AppendInitialSystem(Y,U,model_type,data_size)
     print("preU:")
@@ -209,39 +207,71 @@ def generate_data(length:int,Control_type:str,model_type: ModelType,const_value 
     for k in range(length - 2):
         #Generate U
         AppendControl(U,data_size,Control_type,k,const_value=const_value,jump_value=jump_value,dist_val=disruption_amplitude)
+        if(data_size == 2):
+            max_finded_falue = max(max_finded_falue,abs(U[0][-1]),abs(U[1][-1]))
+        else:
+            max_finded_falue = max(max_finded_falue,abs(U[-1]))
         #Generate Y
         AppendSystem(Y,U,model_type)
+        if(data_size == 2):
+            TwoDistraction(Y,max(abs(Y[0][-1]*output_noise_scale),abs(Y[1][-1]*output_noise_scale)))
+            max_finded_falue = max(max_finded_falue,abs(Y[0][-1]),abs(Y[1][-1]))
+        else:
+            SingleDistraction(Y,abs(Y[-1]*output_noise_scale))
+            max_finded_falue = max(max_finded_falue,abs(Y[-1]))
+            
     print("postU:")
     print(len(U))
     print("postY:")
     print(len(Y))
-    Z = GenerateSignalNoise(1,len(Y),output_noise)[0]
-    if data_size == 2:
-        Z = GenerateSignalNoise(len(Y),len(Y[0]),output_noise)
-    
+    #Z = GenerateSignalNoise(1,len(Y),output_noise)[0]
+    #if data_size == 2:
+    #    Z = GenerateSignalNoise(len(Y),len(Y[0]),output_noise)
+    if(use_preprocesing_scale):
+        if(data_size != 2):
+            for index in range(0,len(Y)):
+                Y[index] =  Y[index] / max_finded_falue
+                U[index] =  U[index] / max_finded_falue
+        else:
+            for index in range(0,len(Y[0])):
+                Y[0][index] = Y[0][index] / max_finded_falue
+                Y[1][index] = Y[1][index] / max_finded_falue
+                U[0][index] = U[0][index] / max_finded_falue
+                U[1][index] = U[1][index] / max_finded_falue
+
+
     if data_size == 2:
         Y = [list(l) for l in Y]
-        df = pd.DataFrame({'Y1': Y[0], 'U1': U[0],'Y2': Y[1], 'U2': U[1]})
+        df = pd.DataFrame({'Y1': Y[0], 'U1': U[0],'Y2': Y[1], 'U2': U[1],'scale_value':max_finded_falue})
         df.to_csv('Data/'+filename_to_save+'.csv', index=False)
-        return zip(zip(Y[0], U[0]),zip(Y[1], U[1]))
+        return {zip(zip(Y[0], U[0]),zip(Y[1], U[1])),max_finded_falue}
     print(Y)
-    df = pd.DataFrame({'Y': Y, 'U': U})
+    df = pd.DataFrame({'Y': Y, 'U': U,'scale_value':max_finded_falue})
     df.to_csv('Data/'+filename_to_save+'.csv', index=False)
-    return zip(Y,U)
+    return {zip(Y,U),max_finded_falue}
 
 
-data = generate_data(1000,"Const",ModelType.SingleInputSingleOutput1,disruption_amplitude=2,output_noise=0,filename_to_save="learn_noise_siso2")
+data,maxValue = generate_data(200,"Sin",ModelType.SingleInputSingleOutput2,const_value=5,disruption_amplitude=0,output_noise=0,output_noise_scale=0,filename_to_save="test",use_preprocesing_scale=False)
+data2,maxValue = generate_data(200,"Sin",ModelType.SingleInputSingleOutput2,const_value=5,disruption_amplitude=0,output_noise=0,output_noise_scale=0,filename_to_save="test",use_preprocesing_scale=True)
 print("")
 print("Wyświetlamy wygenerowane dane:")
 print("niebiseki - model   output")
 print("czerw     - control output")
 print("")
+print(maxValue)
 unzippedData = []
 unzippedControl = []
+unzippedData2 = []
+unzippedControl2 = []
 for elem in tuple(data): 
     # print(elem)
     unzippedData.append(elem[0])
     unzippedControl.append(elem[1])
+
+for elem in tuple(data2): 
+    # print(elem)
+    unzippedData2.append(elem[0] )
+    unzippedControl2.append(elem[1] )
 
 # SingleInputSingleOutput1
 
@@ -249,9 +279,14 @@ fig, ax = plt.subplots(figsize=(5, 2.7), layout='constrained')
 
 ax.plot(unzippedData,c='b',label="Output")
 ax.plot(unzippedControl, c='r',label="Input")
+ax.plot(unzippedData2, c='b')
+ax.plot(unzippedControl2,  c='r')
 ax.legend() 
 plt.grid(True)
 plt.show()
+
+fig, ax = plt.subplots(figsize=(5, 2.7), layout='constrained')
+
 
 # na szybko dla 1 zm stanu i 1 sterowania, ps czym jest ta abominacja, co tak sie rozpakowuje strasznie
 # Tworzenie DataFrame z danymi
