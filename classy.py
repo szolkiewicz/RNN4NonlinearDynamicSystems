@@ -18,8 +18,8 @@ class LSTMModel(nn.Module):
         self.hidden_size_1 = hidden_size_1
         self.hidden_size_2 = hidden_size_2
         self.input_size = input_size
-        self.lstm_1 = nn.LSTM(input_size,hidden_size_1, batch_first=True)
-        self.lstm_2 = nn.LSTM(hidden_size_1,hidden_size_2, batch_first=True)
+        self.lstm_1 = nn.LSTM(input_size,hidden_size_1)
+        self.lstm_2 = nn.LSTM(hidden_size_1,hidden_size_2)
         self.linear = nn.Linear(hidden_size_2,out_size)
         self.hidden_1 = (torch.zeros(1,1,hidden_size_1), torch.zeros(1,1,hidden_size_1))
         self.hidden_2 = (torch.zeros(1,1,hidden_size_2), torch.zeros(1,1,hidden_size_2))
