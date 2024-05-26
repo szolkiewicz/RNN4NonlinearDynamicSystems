@@ -204,7 +204,7 @@ def generate_data(length:int,Control_type:str,model_type: ModelType,const_value 
     print(len(U))
     print("preY:")
     print(len(Y))
-    for k in range(length - 2):
+    for k in range(length + 1):
         #Generate U
         AppendControl(U,data_size,Control_type,k,const_value=const_value,jump_value=jump_value,dist_val=disruption_amplitude)
         if(data_size == 2):
@@ -219,11 +219,14 @@ def generate_data(length:int,Control_type:str,model_type: ModelType,const_value 
         else:
             SingleDistraction(Y,abs(Y[-1]*output_noise_scale))
             max_finded_falue = max(max_finded_falue,abs(Y[-1]))
-            
-    print("postU:")
-    print(len(U))
-    print("postY:")
-    print(len(Y))
+    if(data_size != 2):
+        Y.pop(-1)
+        U.pop(0)
+    else:
+        Y[0].pop(-1)
+        Y[1].pop(-1)
+        U[0].pop(0)
+        U[1].pop(0)
     #Z = GenerateSignalNoise(1,len(Y),output_noise)[0]
     #if data_size == 2:
     #    Z = GenerateSignalNoise(len(Y),len(Y[0]),output_noise)
@@ -251,8 +254,7 @@ def generate_data(length:int,Control_type:str,model_type: ModelType,const_value 
     return {zip(Y,U),max_finded_falue}
 
 
-data,maxValue = generate_data(200,"Sin",ModelType.SingleInputSingleOutput2,const_value=5,disruption_amplitude=0,output_noise=0,output_noise_scale=0,filename_to_save="test",use_preprocesing_scale=False)
-data2,maxValue = generate_data(200,"Sin",ModelType.SingleInputSingleOutput2,const_value=5,disruption_amplitude=0,output_noise=0,output_noise_scale=0,filename_to_save="test",use_preprocesing_scale=True)
+data,maxValue = generate_data(5000,"Const",ModelType.SingleInputSingleOutput2,const_value=0,disruption_amplitude=5,output_noise=0,output_noise_scale=.00,filename_to_save="learn_noise_siso2_2",use_preprocesing_scale=True)
 print("")
 print("Wyświetlamy wygenerowane dane:")
 print("niebiseki - model   output")
@@ -261,17 +263,10 @@ print("")
 print(maxValue)
 unzippedData = []
 unzippedControl = []
-unzippedData2 = []
-unzippedControl2 = []
 for elem in tuple(data): 
-    # print(elem)
+    print(elem)
     unzippedData.append(elem[0])
     unzippedControl.append(elem[1])
-
-for elem in tuple(data2): 
-    # print(elem)
-    unzippedData2.append(elem[0] )
-    unzippedControl2.append(elem[1] )
 
 # SingleInputSingleOutput1
 
@@ -279,8 +274,6 @@ fig, ax = plt.subplots(figsize=(5, 2.7), layout='constrained')
 
 ax.plot(unzippedData,c='b',label="Output")
 ax.plot(unzippedControl, c='r',label="Input")
-ax.plot(unzippedData2, c='b')
-ax.plot(unzippedControl2,  c='r')
 ax.legend() 
 plt.grid(True)
 plt.show()
