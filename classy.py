@@ -21,7 +21,7 @@ class LSTMModel(nn.Module):
 
     def forward(self, seq, hidden_state):
         lstm_out_1, self.hidden = self.lstm_1(seq.view(len(seq), -1, self.input_size), hidden_state)
-        
+
         pred = self.linear(lstm_out_1.view(len(seq), -1))
-        hidden_state = self.hidden
+        # hidden_state = self.hidden
         return pred

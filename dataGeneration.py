@@ -197,7 +197,7 @@ def generate_data(length:int,Control_type:str,model_type: ModelType,const_value 
         Y = [[],[]]
         U = [[],[]]
         
-    max_finded_falue = 0.0
+    max_finded_falue = 0.0      #najwiekszy znaleziony falus
     AppendInitialControl(U,data_size,Control_type,const_value=const_value,jump_value=jump_value,dist_val=disruption_amplitude)
     AppendInitialSystem(Y,U,model_type,data_size)
     print("preU:")
@@ -219,7 +219,8 @@ def generate_data(length:int,Control_type:str,model_type: ModelType,const_value 
         else:
             SingleDistraction(Y,abs(Y[-1]*output_noise_scale))
             max_finded_falue = max(max_finded_falue,abs(Y[-1]))
-            
+    ################################################################################################################################################### XD
+    max_finded_falue=6
     print("postU:")
     print(len(U))
     print("postY:")
@@ -250,9 +251,9 @@ def generate_data(length:int,Control_type:str,model_type: ModelType,const_value 
     df.to_csv('Data/'+filename_to_save+'.csv', index=False)
     return {zip(Y,U),max_finded_falue}
 
-
-data,maxValue = generate_data(200,"Sin",ModelType.SingleInputSingleOutput2,const_value=5,disruption_amplitude=0,output_noise=0,output_noise_scale=0,filename_to_save="test",use_preprocesing_scale=False)
-data2,maxValue = generate_data(200,"Sin",ModelType.SingleInputSingleOutput2,const_value=5,disruption_amplitude=0,output_noise=0,output_noise_scale=0,filename_to_save="test",use_preprocesing_scale=True)
+# ["Sin","SinComplex","UnitJump","DiracDelta","Const"]
+data,maxValue = generate_data(1500,"UnitJump",ModelType.SingleInputSingleOutput2,const_value=1,disruption_amplitude=0,output_noise=0.02,output_noise_scale=0,filename_to_save="test_jump_siso2_2",use_preprocesing_scale=True)
+# data2,maxValue = generate_data(200,"Const",ModelType.SingleInputSingleOutput2,const_value=5,disruption_amplitude=0,output_noise=0,output_noise_scale=0,filename_to_save="learn_noise_siso2_2",use_preprocesing_scale=True)
 print("")
 print("Wyświetlamy wygenerowane dane:")
 print("niebiseki - model   output")
@@ -268,10 +269,10 @@ for elem in tuple(data):
     unzippedData.append(elem[0])
     unzippedControl.append(elem[1])
 
-for elem in tuple(data2): 
-    # print(elem)
-    unzippedData2.append(elem[0] )
-    unzippedControl2.append(elem[1] )
+# for elem in tuple(data2): 
+#     # print(elem)
+#     unzippedData2.append(elem[0] )
+#     unzippedControl2.append(elem[1] )
 
 # SingleInputSingleOutput1
 
