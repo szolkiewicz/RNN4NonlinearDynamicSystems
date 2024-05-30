@@ -9,112 +9,60 @@ import numpy as np
 #       Control GENERATION
 #
 
-Control_Types = ["Sin","SinComplex","UnitJump","DiracDelta","Const"]
+Control_Types = ["Sin","SinComplex","UnitJump","RandomUnitJumps","DiracDelta","Const"]
 
-def AppendControl(u,data_size:int,complexity:str,k:int,jump_value:int,const_value:int = 0,dist_val: int = 0):
-    if  data_size == 1:
-        if complexity == "Sin":
-            SingleInputSimpleSin(u,k)
-        elif complexity == "SinComplex":
-            SingleInputComplexSin(u,k)
-        elif complexity == "UnitJump":
-            SingleInputConst(u,jump_value)
-        elif complexity == "DiracDelta":
-            SingleInputConst(u,0)
-        elif complexity == "Const":
-            SingleInputConst(u,const_value)
-        SingleDistraction(u,dist_val)
-    elif data_size == 2:
-        if complexity == "Sin":
-            TwoImputSimpleSin(u,k)
-        elif complexity == "SinComplex":
-            TwoImputComplexSin(u,k)
-        elif complexity == "UnitJump":
-            TwoInputConst(u,jump_value)
-        elif complexity == "DiracDelta":
-            TwoInputConst(u,0)
-        elif complexity == "Const":
-            TwoInputConst(u,const_value)
-        TwoDistraction(u,dist_val)
+def AppendControl(u,complexity:str,k:int,const_value:int = 0,dist_val: int = 0):
+    if complexity == "Sin":
+        InputSimpleSin(u,k,const=const_value)
+    elif complexity == "SinComplex":
+        InputComplexSin(u,k,const_value)
+    elif complexity == "UnitJump":
+        InputConst(u,const_value)
+    elif complexity == "DiracDelta":
+        InputConst(u,0)
+    elif complexity == "Const" or complexity == "RandomUnitJumps":
+        InputConst(u,const_value)
+    Distraction(u,dist_val)
 
-def AppendInitialControl(u,data_size:int,complexity:bool,jump_value:int,const_value:int = 0,dist_val: int = 0):
-    if  data_size == 1:
-        if complexity == "Sin":
-            SingleInputSimpleSin(u,-2)
-            SingleDistraction(u,dist_amplitude=dist_val)
-            SingleInputSimpleSin(u,-1)
-        elif complexity == "SinComplex":
-            SingleInputComplexSin(u,-2)
-            SingleDistraction(u,dist_amplitude=dist_val)
-            SingleInputComplexSin(u,-1)
-        elif complexity == "UnitJump":
-            SingleInputConst(u,0)
-            SingleDistraction(u,dist_amplitude=dist_val)
-            SingleInputConst(u,0)
-        elif complexity == "DiracDelta":
-            SingleInputConst(u,0)
-            SingleDistraction(u,dist_amplitude=dist_val)
-            SingleInputConst(u,jump_value)
-        elif complexity == "Const":
-            SingleInputConst(u,const_value)
-            SingleDistraction(u,dist_amplitude=dist_val)
-            SingleInputConst(u,const_value)
-        SingleDistraction(u,dist_amplitude=dist_val)
-    elif data_size == 2:
-        if complexity == "Sin":
-            TwoImputSimpleSin(u,-1)
-            TwoDistraction(u,dist_val)
-            TwoImputSimpleSin(u,-2)
-        elif complexity == "SinComplex":
-            TwoImputComplexSin(u,-1)
-            TwoDistraction(u,dist_val)
-            TwoImputComplexSin(u,-2)
-        elif complexity == "UnitJump":
-            TwoInputConst(u,0)
-            TwoDistraction(u,dist_val)
-            TwoInputConst(u,0)
-        elif complexity == "DiracDelta":
-            TwoInputConst(u,0)
-            TwoDistraction(u,dist_val)
-            TwoInputConst(u,jump_value)
-        elif complexity == "Const":
-            TwoInputConst(u,const_value)
-            TwoDistraction(u,dist_val)
-            TwoInputConst(u,const_value)
-        TwoDistraction(u,dist_val)
+def AppendInitialControl(u,complexity:bool,const_value:int = 0,dist_val: int = 0):
+    if complexity == "Sin":
+        InputSimpleSin(u,-2,const_value)
+        Distraction(u,dist_amplitude=dist_val)
+        InputSimpleSin(u,-1,const_value)
+    elif complexity == "SinComplex":
+        InputComplexSin(u,-2,const_value)
+        Distraction(u,dist_amplitude=dist_val)
+        InputComplexSin(u,-1,const_value)
+    elif complexity == "UnitJump":
+        InputConst(u,0)
+        Distraction(u,dist_amplitude=dist_val)
+        InputConst(u,0)
+    elif complexity == "DiracDelta":
+        InputConst(u,0)
+        Distraction(u,dist_amplitude=dist_val)
+        InputConst(u,const_value)
+    elif complexity == "Const" or complexity == "RandomUnitJumps":
+        InputConst(u,const_value)
+        Distraction(u,dist_amplitude=dist_val)
+        InputConst(u,const_value)
 
-def SingleInputSimpleSin(u,k):
-    u.append(2 * m.sin(m.pi * k /10))
+    Distraction(u,dist_amplitude=dist_val)
 
-def SingleInputComplexSin(u,k):
-    u.append(1.75 * m.sin(m.pi * k /5) + 1.5 * m.cos(m.pi * k / 10))
+def InputSimpleSin(u,k,const):
+    u.append(2 * m.sin(m.pi * k /10) + const)
 
-def SingleInputConst(u,const:int):
+def InputComplexSin(u,k,const):
+    u.append(1.75 * m.sin(m.pi * k /5) + 1.5 * m.cos(m.pi * k / 10) + const)
+
+def InputConst(u,const:int):
     u.append(const)
 
-def SingleDistraction(u,dist_amplitude:int):
+def Distraction(u,dist_amplitude:int):
     u[-1] += random.uniform(-1,1) * dist_amplitude
 
 def GenerateSignalNoise(len,len2, amplitude):
     Z = ((np.random.rand(len,len2)*2)-1)*amplitude
     return list(np.array(Z))
-
-def TwoImputSimpleSin(u,k):
-    u[0].append(2 * m.sin(m.pi * k /10))
-    u[1].append(2 * m.cos(m.pi * k /10))
-
-
-def TwoImputComplexSin(u,k):
-    u[0].append(1.75 * m.cos(m.pi * k /5) + 1.5 * m.sin(m.pi * k /10))
-    u[1].append(1.75 * m.sin(m.pi * k /5) + 1.5 * m.cos(m.pi * k /10))
-
-def TwoInputConst(u,const:int):
-    u[0].append(const)
-    u[1].append(const)
-
-def TwoDistraction(u,dist_amplitude:int):
-    u[0][-1] += random.uniform(-1,1) * dist_amplitude
-    u[1][-1] += random.uniform(-1,1) * dist_amplitude
 
 
 #
@@ -126,29 +74,17 @@ def SISO1(Y,u):
 def SISO2(Y,u):
     Y.append((Y[-1] * Y[-2] * (Y[-1] + 2.5))  /  (1 + Y[-1] * Y[-1] *Y[-2] * Y[-2]) + u[-1])
 
-def TITO(Y,U):
-    y1 = Y[0]
-    y2 = Y[1]
-    Y[0].append( (y1[-1])          / (1 + pow(y2[-1],2)) + U[0][-1] )
-    Y[1].append( (y1[-1] * y2[-1]) / (1 + pow(y2[-1],2)) + U[1][-1] )
-
 class ModelType(enum.Enum):
-    SingleInputSingleOutput1 = SISO1
-    SingleInputSingleOutput2 = SISO2
-    TwoInputTwoOutput = TITO
+    InputOutput1 = SISO1
+    InputOutput2 = SISO2
 
 def AppendSystem(Y,U,model:ModelType):
     model(Y,U)
 
-def AppendInitialSystem(Y,U,model:ModelType,data_size:int):
-    if data_size == 1:
-        Y.append(0)
-        Y.append(0)
-    if data_size == 2:
-        Y[0].append(0)
-        Y[0].append(0)
-        Y[1].append(0)
-        Y[1].append(0)
+def AppendInitialSystem(Y,U,model:ModelType,y_base:int):
+    Y.append(y_base)
+    Y.append(y_base)
+    
     
     #model(Y,U)
     #model(Y,U)
@@ -160,7 +96,7 @@ def AppendInitialSystem(Y,U,model:ModelType,data_size:int):
     #Y = Y[2:len(Y)]
 
 
-def generate_data(length:int,Control_type:str,model_type: ModelType,const_value :int = 0,disruption_amplitude: int = 0, output_noise: int = 0, output_noise_scale: int = 0,jump_value:int = 1, filename_to_save:str = "generated_data",use_preprocesing_scale:bool = False):
+def generate_data(n:int,Control_type:str,model_type: ModelType,const :int = 0,disruption_amplitude: int = 0, output_noise_scale: int = 0,jump_value:int = 0,y_base_value: int = 0):
     """function generate data of given model_type, length and input_complexity
 
     Args:
@@ -170,127 +106,165 @@ def generate_data(length:int,Control_type:str,model_type: ModelType,const_value 
         const_value (int): Zmieniasz gdy chcesz mieć jakąś stałą wartość podawaną na wejście (nie zmieniasz gdy podajesz sam szum)
         disruption_amplitude (int): ustawia ampltude zakłuceń jakie pojawią się w sterwaniu  
         iump_value (int): określa wysokość zmiany delty diracka albo skoku jednostkowego (uwaga mi raz wykoleiło system chyba 2 z rowerka (trzeba uważać ))
-        filename_to_save (str): nazwa pliku pod jaką zostaną zapisane dane 
         output_noise_scale (double) - dodaje szum o wartosci procentowej do aktualnego wyjścia jf wyjście 
 
     Returns:
         TUPLA{zip złorzony z par (Y_n,U_n)<<"to co było" , scale_value(FLOAT) <<"wartość przez jaką przeskalowane jest wyjście i sterowanie"}
     """
-    #
-    # Sprawdzania poprawności typu sterowania
-    #
     if Control_type not in Control_Types:
         return [[],[]]
 
-    if length <= 2:
-        return
-    #
-    # ustawianie parametru rozmiaru danych
-    #
-    if model_type == ModelType.TwoInputTwoOutput: 
-        data_size = 2
-    else:
-        data_size = 1
+    length = n * 50
+
     Y = []
     U = []
-    if data_size == 2:
-        Y = [[],[]]
-        U = [[],[]]
+    const_value = const
         
     max_finded_falue = 0.0
-    AppendInitialControl(U,data_size,Control_type,const_value=const_value,jump_value=jump_value,dist_val=disruption_amplitude)
-    AppendInitialSystem(Y,U,model_type,data_size)
-    print("preU:")
-    print(len(U))
-    print("preY:")
-    print(len(Y))
+    swap = random.randrange(15,length - 15)
+    AppendInitialControl(U,Control_type,const_value=const_value,dist_val=disruption_amplitude)
+    AppendInitialSystem(Y,U,model_type,y_base_value)
+
     for k in range(length - 2):
+        if(k == swap):
+            const_value = jump_value
         #Generate U
-        AppendControl(U,data_size,Control_type,k,const_value=const_value,jump_value=jump_value,dist_val=disruption_amplitude)
-        if(data_size == 2):
-            max_finded_falue = max(max_finded_falue,abs(U[0][-1]),abs(U[1][-1]))
-        else:
-            max_finded_falue = max(max_finded_falue,abs(U[-1]))
+        AppendControl(U,Control_type,k,const_value=const_value,dist_val=disruption_amplitude)
+        max_finded_falue = max(max_finded_falue,abs(U[-1]))
         #Generate Y
         AppendSystem(Y,U,model_type)
-        if(data_size == 2):
-            TwoDistraction(Y,max(abs(Y[0][-1]*output_noise_scale),abs(Y[1][-1]*output_noise_scale)))
-            max_finded_falue = max(max_finded_falue,abs(Y[0][-1]),abs(Y[1][-1]))
+        Distraction(Y,abs(Y[-1]*output_noise_scale))
+        max_finded_falue = max(max_finded_falue,abs(Y[-1]))
+    return (zip(Y,U),max_finded_falue)
+
+
+
+def GenerateData(filename:str = "",plot:bool = True,iteration_length:int = 1,sin_on:bool = False, complex_sin_on:bool = False, jumps_on:bool = False,sin_jumps_on:bool = False,complex_sin_jumps_on:bool = False, data100_on1jump:int = 1,output_noice_percentage = 0.02):
+    maxes = []
+    prev_y = 0
+    AllData = []
+    #Generowanie próbek wyjścia sinusa
+    if sin_on:
+        data, max = generate_data(iteration_length,"Sin",ModelType.InputOutput2,const=0,disruption_amplitude=0,output_noise_scale=output_noice_percentage,y_base_value=prev_y)
+        AllData += tuple(data)
+        prev_y = AllData[-1][0]
+        maxes.append(max)
+    #Generowanie próbek wyjścia complex_sinusa
+    if complex_sin_on:
+        data, max = generate_data(iteration_length,"SinComplex",ModelType.InputOutput2,const=0,disruption_amplitude=0,output_noise_scale=output_noice_percentage,y_base_value=prev_y)
+        AllData += tuple(data)
+        prev_y = AllData[-1][0]
+        maxes.append(max)
+    #Generowanie próbek z serowaniem skokowym
+    if jumps_on:
+        if len(AllData) != 0:
+            prev_u = AllData[-1][1]
         else:
-            SingleDistraction(Y,abs(Y[-1]*output_noise_scale))
-            max_finded_falue = max(max_finded_falue,abs(Y[-1]))
-            
-    print("postU:")
-    print(len(U))
-    print("postY:")
-    print(len(Y))
-    #Z = GenerateSignalNoise(1,len(Y),output_noise)[0]
-    #if data_size == 2:
-    #    Z = GenerateSignalNoise(len(Y),len(Y[0]),output_noise)
-    if(use_preprocesing_scale):
-        if(data_size != 2):
-            for index in range(0,len(Y)):
-                Y[index] =  Y[index] / max_finded_falue
-                U[index] =  U[index] / max_finded_falue
+
+            prev_u = random.uniform(-3, 3)
+        new_u = random.uniform(-3, 3)
+        for _ in range(0,iteration_length):
+            while (abs(new_u - prev_u) < 0.5):
+                new_u = random.uniform(-3, 3)
+            data,max = generate_data(data100_on1jump,"RandomUnitJumps",ModelType.InputOutput2,const=prev_u,disruption_amplitude=0,output_noise_scale=output_noice_percentage,jump_value=new_u,y_base_value=prev_y)
+            prev_u = new_u
+            AllData += tuple(data)
+            prev_y = AllData[-1][0]
+    #Generowanie próbek z serowaniem skokowym + sin
+    if sin_jumps_on:
+        if len(AllData) != 0:
+            prev_u = AllData[-1][1]
+
         else:
-            for index in range(0,len(Y[0])):
-                Y[0][index] = Y[0][index] / max_finded_falue
-                Y[1][index] = Y[1][index] / max_finded_falue
-                U[0][index] = U[0][index] / max_finded_falue
-                U[1][index] = U[1][index] / max_finded_falue
+            prev_u = random.uniform(-3, 3)
+        new_u = random.uniform(-3, 3)
+        for _ in range(0,iteration_length):
+            while (abs(new_u - prev_u) < 0.5):
+                new_u = random.uniform(-3, 3)
+            data,max = generate_data(data100_on1jump*2,"Sin",ModelType.InputOutput2,const=prev_u,disruption_amplitude=0,output_noise_scale=output_noice_percentage,jump_value=new_u,y_base_value=prev_y)
+            prev_u = new_u
+            AllData += tuple(data)
+            prev_y = AllData[-1][0]
+        #Generowanie próbek z serowaniem skokowym + complexSin
+    if complex_sin_jumps_on:
+        if len(AllData) != 0:
+            prev_u = AllData[-1][1]
+        else:
+            prev_u = random.uniform(-3, 3)
+        new_u = random.uniform(-3, 3)
+        for _ in range(0,iteration_length):
+            while (abs(new_u - prev_u) < 0.5):
+                new_u = random.uniform(-3, 3)
+            data,max = generate_data(data100_on1jump*2,"SinComplex",ModelType.InputOutput2,const=prev_u,disruption_amplitude=0,output_noise_scale=output_noice_percentage,jump_value=new_u,y_base_value=prev_y)
+            prev_u = new_u
+            AllData += tuple(data)
+            prev_y = AllData[-1][0]
+    #print(AllData)
+    Y = []
+    U = []
+    for a in AllData:
+        Y.append(a[0])
+        U.append(a[1])
+    if filename != "":
+        df = pd.DataFrame({'Y': Y, 'U': U})
+        df.to_csv('Data/'+filename+'.csv', index=False)
+    if plot:
+        print("")
+        print("Wyświetlamy wygenerowane dane:")
+        print("niebiseki - model   output")
+        print("czerw     - control output")
+        print("")
+        unzippedData = []
+        unzippedControl = []
+        #print(JumpsData)
+        for elem in AllData: 
+            unzippedData.append(elem[0])
+            unzippedControl.append(elem[1])
+
+        fig, ax = plt.subplots(figsize=(5, 2.7), layout='constrained')
+
+        ax.plot(unzippedData,c='b',label="Output")
+        ax.plot(unzippedControl, c='r',label="Input")
+        ax.legend() 
+        plt.grid(True)
+        plt.show()
+
+    return
+
+#UWAGA zostanie wygenerowanych 50 razy tyle danych
+ILE_DANYCH = 4 # XD 
+# GenerateData(iteration_length=ILE_DANYCH,sin_on=True,filename="sin_input_data")
+# GenerateData(iteration_length=ILE_DANYCH,complex_sin_on=True,filename="complex_sin_input_data")
+# GenerateData(iteration_length=ILE_DANYCH,jumps_on=True,filename="jumps_input_data")
+GenerateData(iteration_length=ILE_DANYCH,sin_jumps_on=True,filename="a")
+# GenerateData(iteration_length=ILE_DANYCH,complex_sin_jumps_on=True,filename="complexANDjumps_sin_input_data")
+
+#GenerateData(iteration_length=ILE_DANYCH,sin_on=False,complex_sin_on=False,jumps_on=False,sin_jumps_on=False,complex_sin_jumps_on=False,plot=False,filename="")
+# ntimer zmieniamy tylko dla sygnałów bez skoków
+# iteration_length dla sygnałów ze skokami 
 
 
-    if data_size == 2:
-        Y = [list(l) for l in Y]
-        df = pd.DataFrame({'Y1': Y[0], 'U1': U[0],'Y2': Y[1], 'U2': U[1],'scale_value':max_finded_falue})
-        df.to_csv('Data/'+filename_to_save+'.csv', index=False)
-        return {zip(zip(Y[0], U[0]),zip(Y[1], U[1])),max_finded_falue}
-    print(Y)
-    df = pd.DataFrame({'Y': Y, 'U': U,'scale_value':max_finded_falue})
-    df.to_csv('Data/'+filename_to_save+'.csv', index=False)
-    return {zip(Y,U),max_finded_falue}
 
 
-data,maxValue = generate_data(200,"Sin",ModelType.SingleInputSingleOutput2,const_value=5,disruption_amplitude=0,output_noise=0,output_noise_scale=0,filename_to_save="test",use_preprocesing_scale=False)
-data2,maxValue = generate_data(200,"Sin",ModelType.SingleInputSingleOutput2,const_value=5,disruption_amplitude=0,output_noise=0,output_noise_scale=0,filename_to_save="test",use_preprocesing_scale=True)
-print("")
-print("Wyświetlamy wygenerowane dane:")
-print("niebiseki - model   output")
-print("czerw     - control output")
-print("")
-print(maxValue)
-unzippedData = []
-unzippedControl = []
-unzippedData2 = []
-unzippedControl2 = []
-for elem in tuple(data): 
-    # print(elem)
-    unzippedData.append(elem[0])
-    unzippedControl.append(elem[1])
-
-for elem in tuple(data2): 
-    # print(elem)
-    unzippedData2.append(elem[0] )
-    unzippedControl2.append(elem[1] )
-
-# SingleInputSingleOutput1
-
-fig, ax = plt.subplots(figsize=(5, 2.7), layout='constrained')
-
-ax.plot(unzippedData,c='b',label="Output")
-ax.plot(unzippedControl, c='r',label="Input")
-ax.plot(unzippedData2, c='b')
-ax.plot(unzippedControl2,  c='r')
-ax.legend() 
-plt.grid(True)
-plt.show()
-
-fig, ax = plt.subplots(figsize=(5, 2.7), layout='constrained')
-
-
-# na szybko dla 1 zm stanu i 1 sterowania, ps czym jest ta abominacja, co tak sie rozpakowuje strasznie
-# Tworzenie DataFrame z danymi
-#df = pd.DataFrame({'y1': unzippedData, 'u1': unzippedControl})
-
-# Zapis do pliku CSV
-#df.to_csv('Data/generated_data.csv', index=False)
+# UWAGA UWAGA 
+#
+#  jeżeli przybyłeś tu w poszukiwaniu odpowieni na to jak generować dane i jak to działa.
+#
+# 1)nie pytaj czemu to tak chujowo działa. Przeszło to przez parę koncepcji(części z nich już nawet nie pamiętam) jest 22:47 i mam już dość kombinowania.
+#
+# 2) To generuje dane tylko w 1 sposób. nie przeplata różnego rodzaju sterowań, jak wygenereujesz więcej sterowań na raz to je sklei w data-ludzką-stonoge. Jak chcesz mega plik z danymi podajesz |iteration_length = n| i dostajesz dane o długości 50*n(opróbek) UWAGA dla każdy typ sterowania na true (dwa typy sterwoania n == 2, dostajesz 100 próbek jednego i 100 próbek drugiego)
+#
+# data100_on1jump - pozwala ci dać rzadziej skoki w danych tj dla 1 - sok na każde 50 danych uwaga jak to zwiększysz rośnie ilość danych generowana "data100_on1jump" razy
+#
+#
+# chcesz inne zaszumienie?  >>> zmieniasz "output_noice_percentage" << UWAGA TO JE PROCENT AKUTALNEGO WYJŚCIA
+#
+#
+# lepiej kożystać z plików z danymi 
+#
+#
+# jak chcesz nowe dane starego typu just odpal ten program. Polecam jedynie manipulować wsp. iteration_length i traktować go jako oczekiwana długość danych podzielona przez 50 50
+#
+#
+#
+#
