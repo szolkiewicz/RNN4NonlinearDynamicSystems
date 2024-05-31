@@ -114,18 +114,18 @@ def generate_data(n:int,Control_type:str,model_type: ModelType,const :int = 0,di
     if Control_type not in Control_Types:
         return [[],[]]
 
-    length = n * 50
+    length = n * 30
 
     Y = []
     U = []
     const_value = const
         
     max_finded_falue = 0.0
-    swap = random.randrange(15,length - 15)
+    swap = random.randrange(10,length - 10)
     AppendInitialControl(U,Control_type,const_value=const_value,dist_val=disruption_amplitude)
     AppendInitialSystem(Y,U,model_type,y_base_value)
 
-    for k in range(length - 2):
+    for k in range(length + 1):
         if(k == swap):
             const_value = jump_value
         #Generate U
@@ -135,6 +135,9 @@ def generate_data(n:int,Control_type:str,model_type: ModelType,const :int = 0,di
         AppendSystem(Y,U,model_type)
         Distraction(Y,abs(Y[-1]*output_noise_scale))
         max_finded_falue = max(max_finded_falue,abs(Y[-1]))
+
+    Y = Y[2:-1]
+    U = U[3:]
     return (zip(Y,U),max_finded_falue)
 
 
@@ -232,18 +235,20 @@ def GenerateData(filename:str = "",plot:bool = True,iteration_length:int = 1,sin
     return
 
 #UWAGA zostanie wygenerowanych 50 razy tyle danych
-ILE_DANYCH = 4 # XD 
-# GenerateData(iteration_length=ILE_DANYCH,sin_on=True,filename="sin_input_data")
-# GenerateData(iteration_length=ILE_DANYCH,complex_sin_on=True,filename="complex_sin_input_data")
-# GenerateData(iteration_length=ILE_DANYCH,jumps_on=True,filename="jumps_input_data")
-GenerateData(iteration_length=ILE_DANYCH,sin_jumps_on=True,filename="a")
-# GenerateData(iteration_length=ILE_DANYCH,complex_sin_jumps_on=True,filename="complexANDjumps_sin_input_data")
+ILE_DANYCH = 1000 # XD -sz  sam jesteś chacha smieszku ;-; -pk
+GenerateData(iteration_length=ILE_DANYCH,sin_on=True,filename="sin_input_data")
+GenerateData(iteration_length=ILE_DANYCH,complex_sin_on=True,filename="complex_sin_input_data")
+GenerateData(iteration_length=ILE_DANYCH,jumps_on=True,filename="jumps_input_data")
+GenerateData(iteration_length=ILE_DANYCH,sin_jumps_on=True,filename="sinANDjumps_input_data")
+GenerateData(iteration_length=ILE_DANYCH,complex_sin_jumps_on=True,filename="complexANDjumps_sin_input_data")
+
 
 #GenerateData(iteration_length=ILE_DANYCH,sin_on=False,complex_sin_on=False,jumps_on=False,sin_jumps_on=False,complex_sin_jumps_on=False,plot=False,filename="")
 # ntimer zmieniamy tylko dla sygnałów bez skoków
 # iteration_length dla sygnałów ze skokami 
-
-
+#GenerateData(iteration_length=1,sin_on=True,filename="")
+#GenerateData(iteration_length=2,sin_on=True,filename="")
+#GenerateData(iteration_length=10,sin_on=True,filename="")
 
 
 # UWAGA UWAGA 
